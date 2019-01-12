@@ -1,0 +1,42 @@
+.footer
+	background-color: #444444
+	color: #ffffff
+	padding: 50px 100px
+	margin-top: 30px
+	& > .container
+		display: flex
+	&__copyright
+		color: #bcbbbb
+		font-size: .65rem
+		p
+			margin-bottom: 10px
+		p:last-child
+			margin-bottom: 0
+	&__menu
+		display: flex
+		flex-direction: row
+		margin-left: 50px
+		&-list
+			&__title
+				font-size: .9375rem
+				font-weight: bold
+			&__item
+				&-arrow
+					img
+						width: 16px
+				&-link
+					font-size: .75rem
+					a
+						color: #ffffff
+	&__adv
+		flex: 1
+		display: flex
+		justify-content: flex-end
+		& > a > div
+			width: 300px
+			border: 1px solid #ffffff
+			color: #ffffff
+			padding-top: 30px
+			padding-bottom: 30px
+			&:hover
+				background-color: rgba(#ffffff, .3)

@@ -1,0 +1,105 @@
+body
+	font: $font-weight $global-font-size $font-family
+	line-height: $global-line-height
+	color: #000000
+	overflow: hidden
+
+.container
+	max-width: 1200px
+	width: 100%
+	margin: auto
+	padding-left: 15px
+	padding-right: 15px
+
+.section
+	&__header
+		margin-top: 15px
+		margin-bottom: 15px
+		font-weight: 700
+		text-transform: uppercase
+		color: $cablenews-primary
+		font-size: 1.1rem
+		&-title
+			font-size: 1.25rem
+			font-weight: 900
+			color: $cablenews-primary
+		& > a
+			color: $cablenews-primary
+			transition: ease .3s all
+			&:hover
+				color: $cablenews-secondary
+	&__breadcrumb
+		&-list
+			padding: 0
+			list-style: none
+			li
+				display: inline
+				+ li:before
+					padding: 8px
+					color: black
+					content: "/\00a0"
+				a
+					color: $cablenews-primary
+					text-decoration: none
+					&:hover
+						color: #01447e
+	&__pagination
+		display: flex
+		justify-content: center
+		&-list
+			display: inline-block
+			& > a
+				color: black
+				float: left
+				padding: 8px 16px
+				text-decoration: none
+				transition: ease .3s all
+			& > a.active
+				background-color: $cablenews-primary
+				color: white
+			& > a:hover:not(.active)
+				background-color: $cablenews-primary
+				color: #ffffff
+a
+	text-decoration: none
+	vertical-align: middle
+	transition: .2s
+
+img
+	vertical-align: middle
+
+a,
+button
+	&:focus,
+	&:active
+		outline: 0
+		border: 0
+
+input
+	&:focus
+		outline: 0
+
+.btn
+	padding: 5px 35px
+	border-radius: 35px
+	font-weight: 700
+	font-size: .85rem
+	color: #ffffff
+	background-color: $cablenews-secondary
+	border: 0
+	box-shadow: 0 3px 15px rgba($cablenews-secondary, .5)
+	transition: ease-in-out .2s all
+	&:hover
+		box-shadow: 0 3px 15px rgba($cablenews-secondary-hover, .5)
+		background-color: $cablenews-secondary-hover
+		color: #ffffff
+
+.aside
+	width: 100%
+	color: #ffffff
+	background-color: $cablenews-primary
+	box-shadow: 0 3px 15px rgba($cablenews-secondary, .5)
+	padding-top: 30px
+	padding-bottom: 30px
+	margin-top: 15px
+	margin-bottom: 15px
