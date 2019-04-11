@@ -170,6 +170,12 @@ task('font', function() {
 		.pipe(browserSync.stream());
 });
 
+task('jslib', function() {
+	return src(path.src.jslib)
+		.pipe(dest(path.build.js))
+		.pipe(browserSync.stream());
+});
+
 task('csslib', function() {
 	return src(path.src.csslib)
 		.pipe(dest(path.build.style))
@@ -190,5 +196,5 @@ task('clear', function() {
 	return del(path.build.pug);
 });
 
-task('dev', parallel('pug:dev', 'js:dev', 'sass:dev', 'csslib', 'image:dev', 'font', 'browserSyncServer', 'watcher'));
-task('build', series('clear', 'pug:build', 'js:build', 'sass:build', 'csslib', 'image:build', 'font'));
+task('dev', parallel('pug:dev', 'js:dev', 'sass:dev', 'csslib', 'jslib', 'image:dev', 'font', 'browserSyncServer', 'watcher'));
+task('build', series('clear', 'pug:build', 'js:build', 'sass:build', 'csslib', 'jslib', 'image:build', 'font'));
