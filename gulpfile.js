@@ -1,12 +1,14 @@
+'use strict';
+
 const browserSync                                 = require('browser-sync').create(),
       { task, parallel, series, watch, src, dest} = require('gulp'),
       pug                                         = require('gulp-pug'),
       sass                                        = require('gulp-sass'),
-      cleancss                                    = require('gulp-clean-css'),
-      gcmq                                        = require('gulp-group-css-media-queries'),
-      autoprefixer                                = require('gulp-autoprefixer'),
+      babel                                       = require('gulp-babel'),
+      eslint                                      = require('gulp-eslint'),
       imagemin                                    = require('gulp-imagemin'),
       notify                                      = require('gulp-notify'),
+      postcss                                     = require('gulp-postcss'),
       rename                                      = require('gulp-rename'),
       sourcemaps                                  = require('gulp-sourcemaps'),
       uglify                                      = require('gulp-uglify-es').default,
@@ -22,7 +24,10 @@ const path = {
 		font : 'build/font/'
 	},
 	src: {
-		pug   : 'src/pug/*.pug',
+		pug  : {
+			watch: 'src/pug/**/*.pug',
+			prod: 'src/pug/*.pug'
+		},
 		js    : 'src/js/**/*.js',
 		style : 'src/sass/**/*.{sass,scss}',
 		image : 'src/img/**/*.{jpg,jpeg,png,gif,svg,ico}',
@@ -52,6 +57,13 @@ task('reload', function(done) {
 	done();
 });
 
+task('lint', function() {
+	return src([path.src.js, '!node_modules/**'])
+		.pipe(eslint())
+		.pipe(eslint.format())
+		.pipe(eslint.failAfterError());
+});
+
 task('js:dev', function() {
 	return src(path.src.js)
 		.on('error', notify.onError({
@@ -59,6 +71,9 @@ task('js:dev', function() {
 			title: 'JS'
 		}))
 		.pipe(sourcemaps.init())
+		.pipe(babel({
+			presets: ['@babel/env']
+		}))
 		.pipe(concat('bundle.js'))
 		.pipe(uglify())
 		.pipe(rename({
@@ -71,6 +86,9 @@ task('js:dev', function() {
 
 task('js:build', function() {
 	return src(path.src.js)
+		.pipe(babel({
+			presets: ['@babel/env']
+		}))
 		.pipe(concat('bundle.js'))
 		.pipe(uglify())
 		.pipe(rename({
@@ -88,9 +106,9 @@ task('sass:dev', function() {
 			title: 'SASS'
 		}))
 		.pipe(sourcemaps.init())
-		.pipe(cleancss())
-		.pipe(autoprefixer({
-			browsers: ['last 4 versions']
+		.pipe(postcss())
+		.pipe(rename({
+			suffix: '.min'
 		}))
 		.pipe(sourcemaps.write('.'))
 		.pipe(dest(path.build.style))
@@ -100,11 +118,7 @@ task('sass:dev', function() {
 task('sass:build', function() {
 	return src(path.src.style)
 		.pipe(sass())
-		.pipe(autoprefixer({
-			browsers: ['last 4 versions']
-		}))
-		.pipe(gcmq())
-		.pipe(cleancss())
+		.pipe(postcss())
 		.pipe(rename({
 			suffix: '.min'
 		}))
@@ -113,7 +127,7 @@ task('sass:build', function() {
 });
 
 task('pug:dev', function() {
-	return src(path.src.pug)
+	return src(path.src.pug.prod)
 		.on('error', notify.onError({
 			message: '\n<%= error.message %>',
 			title: 'PUG'
@@ -124,7 +138,7 @@ task('pug:dev', function() {
 });
 
 task('pug:build', function() {
-	return src(path.src.pug)
+	return src(path.src.pug.prod)
 		.pipe(pug({
 			pretty: true
 		}))
@@ -151,12 +165,9 @@ task('image:build', function () {
 				optimizationLevel: 5
 			}),
 			imagemin.svgo({
-				plugins: [{
-						removeViewBox: true
-					},
-					{
-						cleanupIDs: false
-					}
+				plugins: [
+					{ removeViewBox: true },
+					{ cleanupIDs: false }
 				]
 			})
 		]))
@@ -183,7 +194,7 @@ task('csslib', function() {
 });
 
 task('watcher', function() {
-	watch(path.src.pug, series('pug:dev', 'reload'));
+	watch(path.src.pug.watch, series('pug:dev', 'reload'));
 	watch(path.src.style, series('sass:dev', 'reload'));
 	watch(path.src.js, series('js:dev', 'reload'));
 	watch(path.src.image, series('image:dev', 'reload'));
@@ -196,5 +207,5 @@ task('clear', function() {
 	return del(path.build.pug);
 });
 
-task('dev', parallel('pug:dev', 'js:dev', 'sass:dev', 'csslib', 'jslib', 'image:dev', 'font', 'browserSyncServer', 'watcher'));
+task('dev', parallel('lint', 'pug:dev', 'js:dev', 'sass:dev', 'csslib', 'jslib', 'image:dev', 'font', 'browserSyncServer', 'watcher'));
 task('build', series('clear', 'pug:build', 'js:build', 'sass:build', 'csslib', 'jslib', 'image:build', 'font'));

@@ -1,0 +1,18 @@
+{
+	"parser": "babel-eslint",
+	"extends": "eslint:recommended",
+	"env": {
+		"browser": true,
+		"node": true,
+		"jquery": true
+	},
+	"rules": {
+		"quotes": [2, "single"],
+		"no-trailing-spaces": 2,
+		"eol-last": 2,
+		"no-unused-vars": 2,
+		"no-underscore-dangle": 2,
+		"no-alert": 2,
+		"no-lone-blocks": 2
+	}
+}
