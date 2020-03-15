@@ -1,0 +1,5 @@
+# Folder with compile project, you need only source code
+build
+
+# Folder with package
+node_modules
