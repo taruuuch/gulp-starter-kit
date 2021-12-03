@@ -1,1 +1,1 @@
-# gulp4-starter-kit
+# gulp-starter-kit

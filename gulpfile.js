@@ -1,70 +1,94 @@
-'use strict';
+import browserSync from 'browser-sync'
 
-const browserSync                                 = require('browser-sync').create(),
-      { task, parallel, series, watch, src, dest} = require('gulp'),
-      pug                                         = require('gulp-pug'),
-      sass                                        = require('gulp-sass'),
-      babel                                       = require('gulp-babel'),
-      eslint                                      = require('gulp-eslint'),
-      imagemin                                    = require('gulp-imagemin'),
-      notify                                      = require('gulp-notify'),
-      postcss                                     = require('gulp-postcss'),
-      rename                                      = require('gulp-rename'),
-      sourcemaps                                  = require('gulp-sourcemaps'),
-      uglify                                      = require('gulp-uglify-es').default,
-      concat                                      = require('gulp-concat'),
-      del                                         = require('del');
+import gulp from 'gulp'
+import pug from 'gulp-pug'
+import gulpSass from 'gulp-sass'
+import babel from 'gulp-babel'
+import postcss from 'gulp-postcss'
+import imagemin from 'gulp-imagemin'
+import notify from 'gulp-notify'
+import rename from 'gulp-rename'
+import sourcemaps from 'gulp-sourcemaps'
+import gulpUglify from 'gulp-uglify-es'
+import concat from 'gulp-concat'
+
+import del from 'del'
+import autoprefixer from 'autoprefixer'
+import mqpacker from 'css-mqpacker'
+import cssnano from 'cssnano'
+import sassPkg from 'sass'
+
+import gifsicle from 'imagemin-gifsicle'
+import mozjpeg from 'imagemin-jpegtran'
+import optipng from 'imagemin-optipng'
+import svgo from 'imagemin-svgo'
+
+const { task, series, watch, src, dest } = gulp
+
+const sass = gulpSass(sassPkg)
+const uglify = gulpUglify.default
+
+cssnano({
+	preset: [
+		'default', {
+			discardComments: {
+				removeAll: true
+			}
+		}
+	]
+})
 
 const path = {
 	build: {
-		pug  : 'build/',
-		js   : 'build/js/',
-		style: 'build/style/',
-		image: 'build/img/',
-		font : 'build/font/'
+		pug   : 'build/',
+		js    : 'build/js/',
+		style : 'build/style/',
+		image : 'build/img/',
+		font  : 'build/font/'
 	},
 	src: {
 		pug  : {
-			watch: 'src/pug/**/*.pug',
-			prod: 'src/pug/*.pug'
+			watch: 'src/templates/**/*.pug',
+			prod: 'src/templates/*.pug'
 		},
-		js    : 'src/js/**/*.js',
-		style : 'src/sass/**/*.{sass,scss}',
-		image : 'src/img/**/*.{jpg,jpeg,png,gif,svg,ico}',
-		font  : 'src/font/**/*.{eot,ttf,woff,woff2}',
-		jslib : [
+		js   : 'src/js/**/*.js',
+		style: 'src/sass/**/*.{sass,scss}',
+		image: 'src/img/**/*.{jpg,jpeg,png,gif,svg,ico}',
+		font : 'src/font/**/*.{eot,ttf,woff,woff2}',
+		jslib: [
+			'./node_modules/selectize/dist/js/standalone/selectize.min.js',
+			'./node_modules/@babel/polyfill/dist/polyfill.min.js',
 			'src/lib/js/*.js',
 		],
 		csslib: [
-			'./node_modules/normalize.css/normalize.css',
+			'./node_modules/selectize/dist/css/selectize.default.css',
 			'src/lib/css/*.css',
 		]
 	}
 };
 
-task('browserSyncServer', function(done) {
+const postcssPlugins = [
+	autoprefixer(),
+	cssnano,
+	mqpacker()
+];
+
+task('browserSyncServer', (done) => {
 	browserSync.init({
 		server: {
-			baseDir: path.build.pug
+			baseDir: path.build.pug,
 		},
 		notify: true
 	});
 	done();
 });
 
-task('reload', function(done) {
+task('reload', (done) => {
 	browserSync.reload();
 	done();
 });
 
-task('lint', function() {
-	return src([path.src.js, '!node_modules/**'])
-		.pipe(eslint())
-		.pipe(eslint.format())
-		.pipe(eslint.failAfterError());
-});
-
-task('js:dev', function() {
+task('js:dev', () => {
 	return src(path.src.js)
 		.on('error', notify.onError({
 			message: '\n<%= error.message %>',
@@ -72,7 +96,7 @@ task('js:dev', function() {
 		}))
 		.pipe(sourcemaps.init())
 		.pipe(babel({
-			presets: ['@babel/env']
+			presets: ['@babel/preset-env']
 		}))
 		.pipe(concat('bundle.js'))
 		.pipe(uglify())
@@ -84,10 +108,10 @@ task('js:dev', function() {
 		.pipe(browserSync.stream());
 });
 
-task('js:build', function() {
+task('js:build', () => {
 	return src(path.src.js)
 		.pipe(babel({
-			presets: ['@babel/env']
+			presets: ['@babel/preset-env']
 		}))
 		.pipe(concat('bundle.js'))
 		.pipe(uglify())
@@ -98,7 +122,7 @@ task('js:build', function() {
 		.pipe(browserSync.stream());
 });
 
-task('sass:dev', function() {
+task('sass:dev', () => {
 	return src(path.src.style)
 		.pipe(sass())
 		.on('error', notify.onError({
@@ -106,7 +130,7 @@ task('sass:dev', function() {
 			title: 'SASS'
 		}))
 		.pipe(sourcemaps.init())
-		.pipe(postcss())
+		.pipe(postcss(postcssPlugins))
 		.pipe(rename({
 			suffix: '.min'
 		}))
@@ -115,10 +139,10 @@ task('sass:dev', function() {
 		.pipe(browserSync.stream());
 });
 
-task('sass:build', function() {
+task('sass:build', () => {
 	return src(path.src.style)
 		.pipe(sass())
-		.pipe(postcss())
+		.pipe(postcss(postcssPlugins))
 		.pipe(rename({
 			suffix: '.min'
 		}))
@@ -126,18 +150,20 @@ task('sass:build', function() {
 		.pipe(browserSync.stream());
 });
 
-task('pug:dev', function() {
+task('pug:dev', () => {
 	return src(path.src.pug.prod)
+		.pipe(pug({
+			pretty: true
+		}))
 		.on('error', notify.onError({
 			message: '\n<%= error.message %>',
 			title: 'PUG'
 		}))
-		.pipe(pug())
 		.pipe(dest(path.build.pug))
 		.pipe(browserSync.stream());
 });
 
-task('pug:build', function() {
+task('pug:build', () => {
 	return src(path.src.pug.prod)
 		.pipe(pug({
 			pretty: true
@@ -146,25 +172,26 @@ task('pug:build', function() {
 		.pipe(browserSync.stream());
 });
 
-task('image:dev', function() {
+task('image:dev', () => {
 	return src(path.src.image)
 		.pipe(dest(path.build.image))
 		.pipe(browserSync.stream());
 });
 
-task('image:build', function () {
+task('image:build', () => {
 	return src(path.src.image)
 		.pipe(imagemin([
-			imagemin.gifsicle({
+			gifsicle({
 				interlaced: true
 			}),
-			imagemin.jpegtran({
+			mozjpeg({
+				quality: 75,
 				progressive: true
 			}),
-			imagemin.optipng({
+			optipng({
 				optimizationLevel: 5
 			}),
-			imagemin.svgo({
+			svgo({
 				plugins: [
 					{ removeViewBox: true },
 					{ cleanupIDs: false }
@@ -175,25 +202,25 @@ task('image:build', function () {
 		.pipe(browserSync.stream());
 });
 
-task('font', function() {
+task('font', () => {
 	return src(path.src.font)
 		.pipe(dest(path.build.font))
 		.pipe(browserSync.stream());
 });
 
-task('jslib', function() {
+task('jslib', () => {
 	return src(path.src.jslib)
 		.pipe(dest(path.build.js))
 		.pipe(browserSync.stream());
 });
 
-task('csslib', function() {
+task('csslib', () => {
 	return src(path.src.csslib)
 		.pipe(dest(path.build.style))
 		.pipe(browserSync.stream());
 });
 
-task('watcher', function() {
+task('watcher', () => {
 	watch(path.src.pug.watch, series('pug:dev', 'reload'));
 	watch(path.src.style, series('sass:dev', 'reload'));
 	watch(path.src.js, series('js:dev', 'reload'));
@@ -203,9 +230,8 @@ task('watcher', function() {
 	watch(path.src.csslib, series('csslib', 'reload'));
 });
 
-task('clear', function() {
-	return del(path.build.pug);
-});
+task('clean', () => del(path.build.pug));
 
-task('dev', parallel('lint', 'pug:dev', 'js:dev', 'sass:dev', 'csslib', 'jslib', 'image:dev', 'font', 'browserSyncServer', 'watcher'));
-task('build', series('clear', 'pug:build', 'js:build', 'sass:build', 'csslib', 'jslib', 'image:build', 'font'));
+task('dev', series('pug:dev', 'js:dev', 'sass:dev', 'image:dev', 'csslib', 'jslib', 'font', 'browserSyncServer', 'watcher'));
+task('build', series('clean', 'pug:build', 'js:build', 'sass:build', 'image:build', 'csslib', 'jslib', 'font'));
+task('image', series('clean', 'image:build'));
